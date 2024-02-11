@@ -1,0 +1,93 @@
+<script src="https://unpkg.com/htmx.org@1.9.10" integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC" crossorigin="anonymous"></script>
+<script src="https://cdn.plot.ly/plotly-2.3.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="styles.css">
+
+
+<body>
+    <div class="container">
+        <h1>Dampened Spring System</h1>
+        <form hx-post="/constants" hx-trigger="change" hx-swap="none">
+            <div class="grid">
+                <div>
+                    <label for="damp">Dampening Factor:</label>
+                    <input type="float" id="damp" name="damp" value=0.1><br><br>
+                </div>
+                <div>
+                    <label for="const">Spring Constant:</label>
+                    <input type="float" id="const" name="const" value=4><br><br>
+                </div>
+                <div>
+                    <label for="const">Weight Mass:</label>
+                    <input type="float" id="mass" name="mass" value=0.1><br><br>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="grid centre" style="width: 75%">
+        <div class="container" style="max-width: 300px">
+            <img src="ceiling.png" class="centre"> <br>
+            <img src="spring.png" class="centre spring" id="spring"/> <br>
+            <img 
+                draggable="false" src="mass.png" class="centre" id="mass" 
+                onmousedown="adjustSpring(event)"
+                hx-post="/run" 
+                hx-vals='js:{height: baseHeight - spring.height}'
+                hx-trigger="mouseup"
+                hx-swap="innerHTML" 
+                hx-target="#chart"
+            />
+        </div>
+        <div class="container">
+            <div id="chart" class="centre"></div>
+        </div>
+    </div>
+</body>
+
+
+<script>
+    let baseHeight = 201
+    async function animateSpring(delays, positions) {
+        await new Promise(r => setTimeout(r, 50));
+        // Assume delays and positions have the same length
+        for (let i = 0; i < delays.length; i++) {
+            await new Promise(r => setTimeout(r, delays[i]*1000));
+            spring.style.height = baseHeight - positions[i]
+        }
+    }
+
+    function adjustSpring(event) {
+        let stretchInit = spring.height
+        let yInit = event.clientY;
+
+        function stretch(pageY) {
+            // add limits here for sensible stretching
+            let new_height = Math.min(500, Math.max(0, pageY + stretchInit - yInit)) + 'px'
+            // This is a bit of a workaround, but instead of explicitly dragging the weight down,
+            // we instead stretch the spring image, causing the weight to also move down
+            spring.style.height = new_height
+        }
+
+        function onMouseMove(event) {
+            stretch(event.pageY);
+        }
+
+        function onMouseUp(event) {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+    
+        // Add event listeners to handle movement and end of movement
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
+
+    document.addEventListener('htmx:afterRequest', async function(evt) {
+        if (evt.detail.target.id == 'chart') {
+            // the pause is needed for the website to register that the new function is there
+            await new Promise(r => setTimeout(r, 50));
+            moveSpring()
+        }
+    });
+</script>

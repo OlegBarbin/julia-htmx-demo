@@ -1,0 +1,15 @@
+.centre {
+    position: relative;
+    left: 50%;
+    transform: translate(-50%, 0);
+}
+
+.spring-image {
+    object-fit: scale-down
+}
+
+.spring {
+    object-fit: fill;
+    width: 73px;
+    height: 201px;
+}
