@@ -5,7 +5,7 @@ spring_constant = 4
 damping_constant = 0.1
 weight_mass = 0.1
 
-app_page = read(open("site.html", "r"), String)
+app_page = read(open("src/site.html", "r"), String)
 
 
 route(() -> app_page, "/")
